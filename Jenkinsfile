@@ -1,6 +1,5 @@
 pipeline {
     agent any
-    
     environment {
       AZURE_SERVICE_PRINCIPAL_ID = credentials('559fc471-900a-4d25-9acc-ee2b53dc4ffc')
       AZURE_SERVICE_PRINCIPAL_SECRET = credentials('P.t8Q~L8wzWNZRupbuSOADkgRvIfOVx4lrPIEdn5')
@@ -20,20 +19,13 @@ pipeline {
                   sudo docker build -t lkasd7512/nginx-proxy:1.0 .
                   sudo docker push lkasd7512/nginx-proxy:1.0
                   '''
-            }
+                }
+              }
           }
-        }
-        stages {
-          stage('Azure Authentication') {
-              steps {
-                script {
-                    withCredentials([azureServicePrincipal('AZURE')]) {
-                      def azureCredentials = azureServicePrincipal('AZURE')
-                      def az = azureCLI(credentialsId: azureCredentials.id)
-                      az.withAuth {
-                        sh 'az login --service-principal -u $AZURE_SERVICE_PRINCIPAL_ID -p $AZURE_SERVICE_PRINCIPAL_SECRET --tenant $AZURE_TENANT_ID'
-                    }
-                 }
+        stage('Authenticate with Azure') {
+            steps {
+                withAzureCliInstallation('default') {
+                azureLogin(credentialsId: 'azure-service-principal', servicePrincipal: true, tenantId: 'c81613f1-8384-4d3d-9416-1a0259a03d57')
               }
            }
         }
@@ -49,5 +41,4 @@ pipeline {
             }
         }
     }
-}
 }
