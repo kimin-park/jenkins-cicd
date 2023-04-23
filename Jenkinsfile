@@ -26,7 +26,7 @@ pipeline {
         }
         stage('deploy kubernetes') {
             steps {
-                withAzureCLI([azureSubscription(credentialsId: 'azure-service-principal', subscriptionId: '3d77ae0d-8ae2-43fe-920e-af78b3ab5519')]) {
+                withAzureCliInstallation('default') {
                     sh '''
                     az aks get-credentials --resource-group projec2-msa-rg --name msacluster
                     kubectl create deployment nginx-proxy --image=lkasd7512/nginx-proxy:1.0
