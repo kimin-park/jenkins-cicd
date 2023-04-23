@@ -1,36 +1,49 @@
 pipeline {
     agent any
+
+    environment {
+        AZURE_SERVICE_PRINCIPAL_ID = credentials('fc5e47eb-ddcb-4481-beab-1acefeb33393')
+        AZURE_SERVICE_PRINCIPAL_SECRET = credentials('5f761a78-8757-4beb-9cfc-ec29f1caef52')
+        AZURE_TENANT_ID = credentials('c81613f1-8384-4d3d-9416-1a0259a03d57')
+    }
     stages {
-        stage('git scm update') {
-          steps {
-              git url: 'https://github.com/kimin-park/jenkins-cicd.git' , branch: 'main'
-          }
-        }
-        stage('docker build and push') {
+        stage('Checkout') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                  sh '''
-                  sudo docker login -u $DOCKER_USER -p $DOCKER_PASS
-                  sudo docker build -t lkasd7512/nginx-proxy:1.0 .
-                  sudo docker push lkasd7512/nginx-proxy:1.0
-                  '''
+                checkout([$class: 'GitSCM', branches: [[name: '*/main']], userRemoteConfigs: [[url: 'https://github.com/kimin-park/jenkins-cicd.git']]])
+            }
+        }
+        stage('Build and Push Docker Image') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')])
+                script {
+                    def dockerImage = 'lkasd7512/nginx-proxy'
+                    def dockerTag = '1.0'
+                    docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-credentials') {
+                        def builtImage = docker.build("$dockerImage:$dockerTag", '.')
+                        builtImage.push()
+                    }
                 }
-              }
-          }
-        stage('Authenticate with Azure') {
-            steps {
-                withAzureCliInstallation('default') {
-                azureLogin(credentialsId: 'azure-service-principal', servicePrincipal: true, tenantId: 'c81613f1-8384-4d3d-9416-1a0259a03d57')
-              }
-           }
+            }
         }
-        stage('deploy kubernetes') {
+        stage('Authenticate to Azure') {
+            steps {
+                script {
+                    withCredentials([azureServicePrincipal('azure-jenkins')]) {
+                        def azureCredentials = azureServicePrincipal('azure-jenkins')
+                        def az = azureCLI(credentialsId: azureCredentials.id)
+                        az.withAuth {
+                            sh 'az login --service-principal -u $AZURE_SERVICE_PRINCIPAL_ID -p $AZURE_SERVICE_PRINCIPAL_SECRET --tenant $AZURE_TENANT_ID'
+                        }
+                    }
+                }
+            }
+        }
+        stage('Deploy to AKS') {
             steps {
                 withAzureCliInstallation('default') {
                     sh '''
-                    az aks get-credentials --resource-group projec2-msa-rg --name msacluster
-                    kubectl create deployment nginx-proxy --image=lkasd7512/nginx-proxy:1.0
-                    kubectl expose deployment nginx-proxy --type=LoadBalancer --port=80 --target-port=80 --name=nginx-proxy
+                        az aks get-credentials --resource-group project2-msa-rg --name msacluster
+                        kubectl apply -f nginx-proxy.yaml
                     '''
                 }
             }
