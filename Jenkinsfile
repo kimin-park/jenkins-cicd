@@ -1,26 +1,30 @@
 pipeline {
-  agent any
-  
-  stages {
-    stage('Build Docker Image') {
-      steps {
-        withCredentials([usernamePassword(credentialsId: 'dockerhub', passwordVariable: 'p2ace0fm1nd!', usernameVariable: 'lkasd7512')]) {
-          script {
-            docker.withRegistry("${DOCKER_REGISTRY}", 'docker-hub-credentials') {
-              def docker = docker.build("nginx-proxy:${env.BUILD_NUMBER}")
-              def dockerImage = docker.build("${DOCKER_REPOSITORY}/nginx-proxy:${env.BUILD_NUMBER}")
-              dockerImage.push()
-            }
+    agent any
+    stages {
+        stage('git scm update') {
+          steps {
+              git url: 'https://github.com/kimin-park/jenkins-cicd.git' , branch: 'main'
           }
         }
-      }
-    }
-    stage('Deploy to AKS') {
-      steps {
-        script {
-          sh 'kubectl --kubeconfig=${KUBECONFIG} apply -f nginx-proxy.yaml'
+        stage('docker build and push') {
+            steps {
+              sh '''
+              docker build -t lkasd7512/nginx-proxy:1.0 .
+              docker push lkasd7512/nginx-proxy:1.0
+              '''
+                
+            }
         }
-      }
+        stage('deploy kubernetes') {
+            steps {
+                withAzureCLI([azureSubscription(credentialsId: '', subscriptionId: '')]) {
+                    sh '''
+                    az aks get-credentials --resource-group projec2-msa-cicd --name msacluster
+                    kubectl create deployment nginx-proxy --image=lkasd7512/nginx-proxy:1.0
+                    kubectl expose deployment nginx-proxy --type=LoadBalancer --port=80 --target-port=80 --name=nginx-proxy
+                    '''
+                }
+            }
+        }
     }
-  }
 }
