@@ -30,7 +30,7 @@ spec:
     spec:
       containers:
       - name: nginx
-        image: nginx
+        image: lkasd7512/nginx-proxy:1.0
         ports:
         - containerPort: 80
         - containerPort: 443
