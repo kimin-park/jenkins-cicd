@@ -9,8 +9,8 @@ pipeline {
         stage('docker build and push') {
             steps {
               sh '''
-              docker build -t lkasd7512/nginx-proxy:1.0 .
-              docker push lkasd7512/nginx-proxy:1.0
+              sudo docker build -t lkasd7512/nginx-proxy:1.0 .
+              sudo docker push lkasd7512/nginx-proxy:1.0
               '''
                 
             }
