@@ -7,6 +7,7 @@ pipeline {
         withCredentials([usernamePassword(credentialsId: 'dockerhub', passwordVariable: 'p2ace0fm1nd!', usernameVariable: 'lkasd7512')]) {
           script {
             docker.withRegistry("${DOCKER_REGISTRY}", 'docker-hub-credentials') {
+              def docker = docker.build("nginx-proxy:${env.BUILD_NUMBER}")
               def dockerImage = docker.build("${DOCKER_REPOSITORY}/nginx-proxy:${env.BUILD_NUMBER}")
               dockerImage.push()
             }
