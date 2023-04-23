@@ -2,9 +2,9 @@ pipeline {
   agent any
   environment {
     DOCKER_REGISTRY = "docker.io"
-    DOCKER_REPOSITORY = "yourdockerusername"
-    DOCKER_USERNAME = credentials('dockerhub-username')
-    DOCKER_PASSWORD = credentials('dockerhub-password')
+    DOCKER_REPOSITORY = "lkasd7512"
+    DOCKER_USERNAME = credentials('lkasd7512')
+    DOCKER_PASSWORD = credentials('p2ace0fm1nd!')
     KUBECONFIG = credentials('aks-kubeconfig')
   }
   stages {
