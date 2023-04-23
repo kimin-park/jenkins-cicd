@@ -21,7 +21,7 @@ pipeline {
             steps {
                 withAzureCLI([azureSubscription(credentialsId: '', subscriptionId: '')]) {
                     sh '''
-                    az aks get-credentials --resource-group projec2-msa-cicd --name msacluster
+                    az aks get-credentials --resource-group projec2-msa-rg --name msacluster
                     kubectl create deployment nginx-proxy --image=lkasd7512/nginx-proxy:1.0
                     kubectl expose deployment nginx-proxy --type=LoadBalancer --port=80 --target-port=80 --name=nginx-proxy
                     '''
