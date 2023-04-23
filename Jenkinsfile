@@ -1,10 +1,5 @@
 pipeline {
     agent any
-    environment {
-      AZURE_SERVICE_PRINCIPAL_ID = credentials('559fc471-900a-4d25-9acc-ee2b53dc4ffc')
-      AZURE_SERVICE_PRINCIPAL_SECRET = credentials('P.t8Q~L8wzWNZRupbuSOADkgRvIfOVx4lrPIEdn5')
-      AZURE_TENANT_ID = credentials('c81613f1-8384-4d3d-9416-1a0259a03d57')
-    }
     stages {
         stage('git scm update') {
           steps {
