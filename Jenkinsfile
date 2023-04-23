@@ -8,11 +8,13 @@ pipeline {
         }
         stage('docker build and push') {
             steps {
-              sh '''
-              sudo docker build -t lkasd7512/nginx-proxy:1.0 .
-              sudo docker push lkasd7512/nginx-proxy:1.0
-              '''
-                
+              withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                sh '''
+                sudo docker login -u $DOCKER_USER -p $DOCKER_PASS
+                sudo docker build -t lkasd7512/nginx-proxy:1.0 .
+                sudo docker push lkasd7512/nginx-proxy:1.0
+                '''
+              }
             }
         }
         stage('deploy kubernetes') {
