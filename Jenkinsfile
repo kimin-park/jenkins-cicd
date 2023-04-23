@@ -8,36 +8,18 @@ pipeline {
         }
         stage('docker build and push') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                  sh '''
-                  sudo docker login -u $DOCKER_USER -p $DOCKER_PASS
-                  sudo docker build -t lkasd7512/nginx-proxy:2.0 .
-                  sudo docker push lkasd7512/nginx-proxy:2.0
-                  '''
-                }
-              }
-          }
-        stage('Example') {
-            steps {
-                // Azure CLI installation step
-                withAzureCliInstallation {
-                    // Perform Azure CLI operations here
-                    sh 'az --version'
-                }
+              sh '''
+              sudo docker build -t lkasd7512/nginx-proxy:1.2 .
+              sudo docker push lkasd7512/nginx-proxy:1.2
+              '''
+                
             }
-        }
-        stage('Authenticate with Azure') {
-            steps {
-                withAzureCliInstallation('default') {
-                azureLogin(credentialsId: 'azure-jenkins', servicePrincipal: true, tenantId: 'c81613f1-8384-4d3d-9416-1a0259a03d57')
-              }
-           }
         }
         stage('deploy kubernetes') {
             steps {
-                withAzureCliInstallation('default') {
+                withAzureCLI([azureSubscription(credentialsId: '', subscriptionId: '')]) {
                     sh '''
-                    az aks get-credentials --resource-group projec2-msa-rg --name msacluster
+                    az aks get-credentials --resource-group projec2-msa-cicd --name msacluster
                     kubectl create deployment nginx-proxy --image=lkasd7512/nginx-proxy:1.0
                     kubectl expose deployment nginx-proxy --type=LoadBalancer --port=80 --target-port=80 --name=nginx-proxy
                     '''
